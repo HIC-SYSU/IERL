@@ -1,0 +1,25 @@
+# Simulation Parameters Configuration
+simulation_parameters:
+
+  # Fluid properties
+  density: 1.06       # g/cm^3
+  viscosity: 0.04     # g/(cm·s)
+
+  # Solver settings
+  time_step: 0.005    # seconds per time step
+  save_step: 4        # time steps between output saves
+  max_step: 200       # total number of time steps (1.0 s / 0.005 s = 200)
+  convs: 1.0e-5       # convergence tolerance
+  elenum: 20          # finite elements per solver segment (mesh resolution)
+
+  # Boundary conditions
+  inlet_type: "PRESSURE_WAVE"   # PRESSURE_WAVE or FLOW
+  outletbctype: "RESISTANCE"    # RESISTANCE or FLOW
+  distributionlaw: "Murray"     # flow distribution law: HK_main or Murray
+  ref_pressure: 0.0             # outlet reference pressure (mmHg)
+
+  # Murray / HK bifurcation exponent
+  beta: 2.33
+
+  # Output format
+  outputType: "TEXT"   # TEXT, VTK, or BOTH

@@ -1,0 +1,93 @@
+# ==============================================================================
+# IERL / BOAC Training Configuration
+# ==============================================================================
+
+# Reproducibility
+seed: 42
+
+# ------------------------------------------------------------------------------
+# Dataset & Environment Setup
+# ------------------------------------------------------------------------------
+data_dir: "/scratch/u6dm/wanganb.u6dm/data/train/vessel_data_aug_hemo"
+
+# Batched Vectorization (Multiprocessing)
+num_envs: 64       # 并行 CFD 沙盒数，建议 = 物理 CPU 核心数
+seq_len: 128       # 网络观测维度（必须与 GPASE seq_len 一致）
+vec_env_start_method: null
+sim_start_method: null
+# ------------------------------------------------------------------------------
+# Environment — Reward Function Weights (Eq. 22, 23, 26)
+# ------------------------------------------------------------------------------
+env:
+  alpha1: 1.0      # reward = tanh(alpha1 * F - alpha2 * P)  整体增益权重
+  alpha2: 0.5      # penalty 权重
+  lam: 1.0         # ΔFFR 权重（血流改善）
+  omega: 0.1       # 平滑度权重
+  lam1: 0.5        # region-mismatch 惩罚系数
+  lam2: 0.5        # size-mismatch 惩罚系数
+  q_hyperemia_ml_s: 1.0    # 充血流量 (ml/s)，如果 JSON 没有则用此默认值
+  p_inlet_mmhg: 100.0      # 入口血压默认值 (mmHg)
+  meta_cache_size: 64
+  # 可用支架型号（若留空则使用 stent_env.py 的内置默认值）
+  stent_diameters_mm: null   # e.g. [2.5, 3.0, 3.5, 4.0]
+  stent_lengths_mm:   null   # e.g. [8, 12, 16, 20, 28, 33, 38]
+
+# ------------------------------------------------------------------------------
+# GPASE Encoder (State Representation)
+# ------------------------------------------------------------------------------
+features_dim: 128
+num_heads: 8
+
+# ------------------------------------------------------------------------------
+# DroQ Critic Ensemble
+# ------------------------------------------------------------------------------
+n_critics: 5
+dropout_rate: 0.02
+net_arch: [256, 256]
+
+# ------------------------------------------------------------------------------
+# BOAC / SAC RL Hyperparameters
+# ------------------------------------------------------------------------------
+learning_rate: 0.0001
+gamma: 0.99
+
+# On-Policy Emulation Buffer
+# buffer_size 建议设为 num_envs 的整数倍，控制历史经验窗口大小
+buffer_size: 2048
+batch_size: 256
+train_freq: 1
+gradient_steps: 1
+
+# ------------------------------------------------------------------------------
+# BOAC — Bayesian GP Correction (Eq. 15-16)
+# ------------------------------------------------------------------------------
+gp_buffer_size: 100        # D_A 滑窗大小：保留最近 N 对 (θ, J(θ)) 用于 GP 拟合
+gp_fit_interval: 200       # 每隔 N 个 total_timesteps 触发一次 Bayesian 修正
+gp_start_timesteps: 1000   # 前 N 步 warm-up，不触发 GP 修正
+bayes_lr: 0.05             # Bayesian 修正专用 Adam 的学习率 (η in Eq. 16)
+
+# ====== 高斯过程回归器参数 (GP Bounds & Configuration) ======
+# 放宽了原本的乘数下界 (原本为默认的 1e-5)
+gp_k1_constant_bounds: [1.0e-8, 1.0e5]
+
+# 放宽了长度尺度的上界 (原本为 1e-2 到 100.0)
+gp_length_scale_bounds: [1.0e-3, 1.0e4]
+
+# 放宽了基线噪声项的下界 (原本为 1e-6 到 1e6)
+gp_k2_constant_bounds: [1.0e-8, 1.0e6]
+
+
+# ------------------------------------------------------------------------------
+# Train / Val Split
+# ------------------------------------------------------------------------------
+val_ratio: 0.2          # 验证集占比（20%）
+eval_freq: 5000         # 每训练 N 步评估一次验证集
+n_eval_episodes: 20     # 每次评估跑多少个验证 episode
+
+# ------------------------------------------------------------------------------
+# Output
+# ------------------------------------------------------------------------------
+run_dir: "/scratch/u6dm/wanganb.u6dm/runs/icrl_run_002"   # 所有训练产出统一存放于此目录
+checkpoint_freq: 2000          # 每隔 N 个 timestep 保存一次 checkpoint
+match_threshold: 0.85
+num_epochs: 20                  # 训练轮次；total_timesteps = num_epochs × 训练集大小 × num_envs
