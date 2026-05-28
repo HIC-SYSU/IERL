@@ -159,18 +159,3 @@ environment/
 train.py              # change sim_interface= only
 ```
 
-## Citation
-
-If you use this code in your research, please cite:
-
-```bibtex
-@article{PLACEHOLDER,
-  author    = {Ming Lei, Anbang Wang, Zhifan Gao, Heye Zhang, Qi Zhang, Zhihui Zhang, Ping Zhu, Dan Deng, Lingyun Zu, Guang Yang, Xiujian Liu},
-  title     = {Informed-Exploration Reinforcement Learning for Automated Virtual Coronary Intervention Planning},
-  journal   = {IEEE Transactions on Medical Imaging},
-  year      = {2026},
-  doi       = {DOI},
-}
-```
-
-> **Note:** This paper is currently under review. Citation details will be updated upon acceptance.
